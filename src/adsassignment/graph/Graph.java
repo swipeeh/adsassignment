@@ -1,10 +1,13 @@
 package adsassignment.graph;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import adsassignment.collectionfactory.CollectionFactory;
 import adsassignment.collectionfactory.CollectionFactory.PQType;
+import adsassignment.collectionfactory.CollectionFactory.SetType;
 import adsassignment.set.ISet;
 import adsassignment.priorityqueue.IPriorityQueue;
 import adsassignment.priorityqueue.linearPriorityqueue.LinearPQ;
@@ -128,10 +131,44 @@ public class Graph implements IGraph {
         //IPriorityQueue<VerticePair> pq = CollectionFactory.getPQ(VerticePair.class, pqType);
 		// end of example code.
     	
-    	
-    	
+    	if(start == null || start == "" || end == null || end == "") {
+    		throw new IllegalArgumentException("Argument can not be an empty string or null.");
+    	}
+		ISet<Vertice> set = CollectionFactory.getSet(Vertice.class, SetType.LINEAR);
+		IPriorityQueue<Vertice> queue = CollectionFactory.getPQ(Vertice.class, PQType.LINEAR);
+		Vertice current;
+		Vertice startVertice = null;
+		int count = 1;
+		Map<Vertice, Integer> distances = new HashMap<Vertice, Integer>();
+		Map<Vertice, Vertice> parents = new HashMap<Vertice, Vertice>();
 		
-        return null;
+		 for (Vertice vertice: vertices) {
+	    	if(start.equals(vertice.element)) {
+	    		startVertice = vertice;
+	    	}
+	    	if (startVertice != null) {
+	    		break;
+	    	}
+	     }
+		queue.add(startVertice, 0);
+		
+		while(!queue.isEmpty()) {
+			current = queue.getNext();
+			if(end.equals(current.element)) {
+				break;
+			}
+			if(!set.contains(current)) {
+				set.add(current);
+				for (int i = 0; i < current.edges.size(); i++) {
+					if(!set.contains(current.edges.get(i).targetVertice)) {
+						queue.add(current.edges.get(i).targetVertice, count);
+						count++;
+						set.add(current.edges.get(i).targetVertice);
+					}
+				}
+			}
+		}
+		return null;	
     }
 
     @Override
