@@ -1,5 +1,7 @@
 package adsassignment.graph;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,9 +10,9 @@ import java.util.Map;
 import adsassignment.collectionfactory.CollectionFactory;
 import adsassignment.collectionfactory.CollectionFactory.PQType;
 import adsassignment.collectionfactory.CollectionFactory.SetType;
-import adsassignment.set.ISet;
 import adsassignment.priorityqueue.IPriorityQueue;
 import adsassignment.priorityqueue.linearPriorityqueue.LinearPQ;
+import adsassignment.set.*;
 
 public class Graph implements IGraph {
 
@@ -123,33 +125,31 @@ public class Graph implements IGraph {
 
     @Override
     public Path computePath(String start, String end) {
-		// Ignore this method in assignment 2
-		// Implement this method in assignment 3
-		
-		// Just example code for how to use the COllectionFactory. You are allowed to delete or change this.
-		//ISet<String> visited = CollectionFactory.getSet(String.class, setType);
-        //IPriorityQueue<VerticePair> pq = CollectionFactory.getPQ(VerticePair.class, pqType);
-		// end of example code.
-    	
     	if(start == null || start == "" || end == null || end == "") {
-    		throw new IllegalArgumentException("Argument can not be an empty string or null.");
+    		throw new IllegalArgumentException("Argument can not be an empty string or a null.");
     	}
-		ISet<Vertice> set = CollectionFactory.getSet(Vertice.class, SetType.LINEAR);
-		IPriorityQueue<Vertice> queue = CollectionFactory.getPQ(Vertice.class, PQType.LINEAR);
+    	
+		ISet<Vertice> set = CollectionFactory.getSet(Vertice.class, setType);
+		IPriorityQueue<Vertice> queue = CollectionFactory.getPQ(Vertice.class, pqType);
 		Vertice current;
 		Vertice startVertice = null;
+		Vertice endVertice = null;
 		int count = 1;
-		Map<Vertice, Integer> distances = new HashMap<Vertice, Integer>();
+		Map<Vertice, Double> distances = new HashMap<Vertice, Double>();
 		Map<Vertice, Vertice> parents = new HashMap<Vertice, Vertice>();
 		
 		 for (Vertice vertice: vertices) {
 	    	if(start.equals(vertice.element)) {
 	    		startVertice = vertice;
 	    	}
-	    	if (startVertice != null) {
+	    	if(end.equals(vertice.element)) {
+	    		endVertice = vertice;
+	    	}
+	    	if (startVertice != null && endVertice != null) {
 	    		break;
 	    	}
 	     }
+		parents.put(startVertice, null);
 		queue.add(startVertice, 0);
 		
 		while(!queue.isEmpty()) {
@@ -158,17 +158,49 @@ public class Graph implements IGraph {
 				break;
 			}
 			if(!set.contains(current)) {
+				
 				set.add(current);
 				for (int i = 0; i < current.edges.size(); i++) {
 					if(!set.contains(current.edges.get(i).targetVertice)) {
-						queue.add(current.edges.get(i).targetVertice, count);
-						count++;
-						set.add(current.edges.get(i).targetVertice);
+						queue.add(current.edges.get(i).targetVertice, current.edges.get(i).weight);
+						
+						if(!distances.containsKey(current.edges.get(i).targetVertice) && start.equals(current.element)) {
+							distances.put(current.edges.get(i).targetVertice, (current.edges.get(i).weight));
+							parents.put(current.edges.get(i).targetVertice, current);
+							//System.out.println("A addition: " + (current.edges.get(i).weight));
+							
+						}
+						else if(!distances.containsKey(current.edges.get(i).targetVertice)) {
+							distances.put(current.edges.get(i).targetVertice, (current.edges.get(i).weight) + distances.get(current));
+							parents.put(current.edges.get(i).targetVertice, current);
+							double x = current.edges.get(i).weight + distances.get(current);
+							//System.out.println("First addition: " + x);
+							
+						}
+						else if(distances.containsKey(current.edges.get(i).targetVertice) && distances.get(current.edges.get(i).targetVertice) > (current.edges.get(i).weight) + distances.get(current)) {
+							distances.put(current.edges.get(i).targetVertice, (current.edges.get(i).weight) + distances.get(current));
+							parents.put(current.edges.get(i).targetVertice, current);
+							double x = current.edges.get(i).weight + distances.get(current);
+							//System.out.println("Another addition: " + x);
+							//System.out.println(parents.toString());
+						}
 					}
 				}
 			}
 		}
-		return null;	
+		
+		//ISet<String> visited = CollectionFactory.getSet(String.class, setType);
+        //IPriorityQueue<VerticePair> pq = CollectionFactory.getPQ(VerticePair.class, pqType);
+		
+		Path path = new Path();
+		Vertice loopVertice = endVertice;
+		while(loopVertice != null) {
+			path.path.add(loopVertice.element);
+			loopVertice = parents.get(loopVertice);
+		}
+		path.cost = distances.get(endVertice);
+		Collections.reverse(path.path);
+        return path;
     }
 
     @Override
@@ -205,24 +237,19 @@ public class Graph implements IGraph {
         Vertice bVertice = null;
     	for (Vertice vertice: vertices) 
         {
-    		if(start.equals(vertice.element))
-    			{
+    		if(start.equals(vertice.element)){
     			aVertice = vertice;
-    			}
-    		if(end.equals(vertice.element))
-    			{
+    		}
+    		if(end.equals(vertice.element)){
     			bVertice = vertice;
-    			}
-    		if (aVertice != null && bVertice != null)
-    			{
+    		}
+    		if (aVertice != null && bVertice != null){
     			break;
-    			}
-    		
-        }
-    	if(aVertice==null ||bVertice==null)
-    			{
-    			return -1;
-    			}
+    		}
+		}
+    	if(aVertice == null || bVertice == null) {
+    		return -1;
+    	}
     	for (int i = 0; i < aVertice.edges.size(); i++) {
 			if(aVertice.edges.get(i).targetVertice.element.equals(end)) {
 				return aVertice.edges.get(i).weight;
@@ -258,15 +285,37 @@ public class Graph implements IGraph {
 
     @Override
     public IGraph computeMinSpanningTree() {
-		// Ignore this method in assignment 2
-		// Implement this method in assignment 3
-		
-		// Just example code for how to use the COllectionFactory. You are allowed to delete or change this.
-		//ISet<String> included = CollectionFactory.getSet(String.class, setType);
-        //IPriorityQueue<VerticePair> pq = CollectionFactory.getPQ(VerticePair.class, pqType);
-		// end of example code.
-		
-        return null;
+    	IGraph minSpanningTree = new Graph();
+		ISet<Vertice> visited = CollectionFactory.getSet(Vertice.class, setType);
+		ISet<Vertice> antiCycle = CollectionFactory.getSet(Vertice.class, setType);
+        IPriorityQueue<Edge> pq = CollectionFactory.getPQ(Edge.class, pqType);
+    	Vertice startVertice = vertices.get(0);
+    	pq.add(new Edge(startVertice, null, 0), 0);
+    	Edge current;
+    	
+    	while(!pq.isEmpty()) {
+    		current = pq.getNext();
+    		if(!antiCycle.contains(current.fromVertice)) {
+    			visited.add(current.fromVertice);
+    			if(current.toVertice == null ) {
+    				minSpanningTree.addEdge(current.fromVertice.element, null, current.weight);
+    				antiCycle.add(current.fromVertice);
+    			}
+    			else {
+    				minSpanningTree.addEdge(current.fromVertice.element, current.toVertice.element, current.weight);
+    				antiCycle.add(current.fromVertice);
+    				System.out.println("dva");
+    			}
+    			
+    			for (int i = 0; i < current.fromVertice.edges.size(); i++) {
+					if(!visited.contains(current.fromVertice.edges.get(i).targetVertice)) {
+						pq.add(new Edge(current.fromVertice.edges.get(i).targetVertice, current.fromVertice, current.fromVertice.edges.get(i).weight), current.fromVertice.edges.get(i).weight);
+					}
+				}
+    		}
+    	}
+		System.out.println("Im pickle Riiiick");
+        return minSpanningTree;
     }
 
     @Override
@@ -378,6 +427,7 @@ public class Graph implements IGraph {
     public void setCollectionsToUse(CollectionFactory.PQType pqType, CollectionFactory.SetType setType) {
         this.pqType = pqType;
         this.setType = setType;
-    }    
+    }
+    
 }
 
