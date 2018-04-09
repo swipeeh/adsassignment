@@ -3,11 +3,12 @@ package adsassignment.collectionfactory;
 import adsassignment.priorityqueue.IPriorityQueue;
 import adsassignment.priorityqueue.linearPriorityqueue.LinearPQ;
 import adsassignment.set.ISet;
+import adsassignment.set.bstset.BSTSet;
+import adsassignment.priorityqueue.linearPriorityqueue.LinearPQ;
 import adsassignment.set.linearSet.LinearSet;
 
-
 public class CollectionFactory {
-     public enum SetType {
+    public enum SetType {
         LINEAR,
         BST,
         AVL,
@@ -25,7 +26,7 @@ public class CollectionFactory {
         if(setType == SetType.LINEAR) {
             set = new LinearSet<>();
         } else if(setType == SetType.BST) {
-            set = null;
+            set = new BSTSet<>();
         } else if(setType == SetType.AVL) {
             set = null;
         } else if(setType == SetType.JAVA) {
